@@ -1,0 +1,71 @@
+package chromobreak
+
+import chromobreak.SingleCellHMMs
+import chromobreak.SingleCellHMMs.Configs
+import blang.types.internals.RealScalar
+
+@Samplers(F0Sampler)
+model SingleCell {
+  param SingleCellData data
+  param Configs configs
+  
+  param String chromosomeFilter ?: ".*"
+  param Double vagueness ?: 10.0
+  
+  random Plated<IntVar> nStates 
+  random RealVar switchRate ?: latentReal
+  random RealVar f0 ?: latentReal
+  random RealVar f1 ?: latentReal 
+  random RealVar f2 ?: latentReal  
+  random RealVar sd ?: latentReal 
+  random RealVar sdSlope ?: latentReal 
+  random RealVar p ?: new RealScalar(0.5) 
+   
+  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope)
+  
+  // Keeping a copy to easily serialize demarginalized hmms
+  random Map<String, SingleCellHMMs> hmms ?: new LinkedHashMap
+  
+//  next steps
+//  - speed things up for quick testing [OK - well check if can reproduce high-ploidity choice]
+//  - better initializations 
+//  - setup appropriate multi-level - optimize schedule by hand
+//  - remove F0 move
+//  - add non-uniform distribution? to make it more costy to assume ploidity change - but that would make it too costy?
+//  - explicit ploidity - with spike and slab prior
+//  - remove random states, just making it hard to change - instead hard set limit
+//  - gof: usage for states
+
+// instead: try to crank up compute
+    
+  laws {
+    
+    switchRate ~ Exponential(1.0)
+    
+    f0 | vagueness ~ Normal(0, vagueness*vagueness) 
+    f1 | vagueness ~ Normal(0, vagueness*vagueness)  
+    f2 | vagueness ~ Normal(0, vagueness*vagueness)  
+    
+    sd ~ Exponential(0.1)
+    sdSlope ~ Exponential(0.1)
+    
+    p ~ ContinuousUniform(0.0, 1.0)
+    
+    for (Index<String> chromosome : data.chromosomes.indices.filter[key.matches("^" + chromosomeFilter + "$")]) {  
+      nStates.get(chromosome) | p, int maxState = configs.maxStates ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
+      | SingleCellHMMs hmm = {
+          val current = new SingleCellHMMs(
+            data, 
+            chromosome, 
+            readCountModel, 
+            switchRate, 
+            configs,
+            nStates.get(chromosome)
+          )
+          hmms.put(chromosome.key, current)
+          current
+      } 
+      ~ LogPotential(hmm.logMarginal) 
+    }
+  }
+}

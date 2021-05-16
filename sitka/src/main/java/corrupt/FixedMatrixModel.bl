@@ -1,0 +1,14 @@
+package corrupt
+
+import corrupt.post.CellLocusMatrix
+
+model FixedMatrixModel {
+  param CellLocusMatrix tipInclusionProbabilities 
+  random CorruptPhylo phylo ?: new CorruptPhylo(tipInclusionProbabilities)
+  
+  laws {
+    phylo ~ Uniform
+    | phylo ~ LogPotential(phylo.logProbability)
+  }
+
+}

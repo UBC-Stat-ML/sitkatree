@@ -1,0 +1,136 @@
+plugins {
+  id 'org.xtext.xtend' version '1.0.21'
+  id 'org.xtext.builder' version '1.0.21'
+  id 'java'
+  id 'eclipse'
+  id 'maven'
+}
+
+dependencies {
+  xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:4.0.1"
+  compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
+  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '2.4.1'
+  compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
+  compile group: 'ca.ubc.stat', name: 'pxviz', version: '1.1.0'
+}
+
+xtext {
+  languages {
+    blang {
+      setup = 'ca.ubc.stat.blang.BlangDslStandaloneSetup'
+      fileExtension = 'bl'
+      generator.outlet.producesJava = true
+      generator.javaSourceLevel = '1.8'
+    }
+  }
+}
+
+repositories {
+  mavenCentral()
+  jcenter()
+  maven {
+    url "https://www.stat.ubc.ca/~bouchard/maven/"
+  }
+}
+
+xtend {
+  generator {
+    javaSourceLevel = 1.8
+  }
+}
+
+apply plugin:'application'
+
+configurations.archives.with {
+    artifacts.remove artifacts.find { it.archiveTask.is distZip }
+    artifacts.remove artifacts.find { it.archiveTask.is distTar }
+}  
+
+def createScript(project, mainClass, name) {
+  project.tasks.create(name: name, type: CreateStartScripts) {
+    outputDir       = new File(project.buildDir, 'scripts')
+    mainClassName   = mainClass
+    applicationName = name
+    classpath       = project.tasks[JavaPlugin.JAR_TASK_NAME].outputs.files + project.configurations.runtime
+  }
+  project.tasks[name].dependsOn(project.jar)
+
+  project.applicationDistribution.with {
+    into("bin") {
+      from(project.tasks[name])
+      fileMode = 0755
+    }
+  }
+}
+
+startScripts.enabled = false
+run.enabled = false
+
+createScript(project, 'corrupt.FixedMatrixModel',       'corrupt-infer')
+createScript(project, 'corrupt.NoisyBinaryModel',       'corrupt-infer-with-noisy-params')
+createScript(project, 'corrupt.distances.L1Decoder',    'corrupt-l1-decode')
+createScript(project, 'corrupt.GenerateData',           'corrupt-generate')
+createScript(project, 'corrupt.post.AverageCLMatrices', 'corrupt-average')
+createScript(project, 'corrupt.Greedy',                 'corrupt-greedy')
+createScript(project, 'corrupt.Distances',              'corrupt-distance')
+createScript(project, 'corrupt.post.ScoreTrees',        'corrupt-batch-distances')
+createScript(project, 'corrupt.viz.PerfectPhyloViz',    'corrupt-viz')
+createScript(project, 'corrupt.viz.TreeGrowthViz',      'corrupt-viz-growth')
+createScript(project, 'corrupt.pre.StraightenJitter',   'corrupt-straighten')
+createScript(project, 'corrupt.pre.Tidify',             'corrupt-tidify')
+createScript(project, 'corrupt.pre.Filter',             'corrupt-filter')
+createScript(project, 'corrupt.pre.Tidy2MutationCell',  'corrupt-tidy2mutcellmtx')
+createScript(project, 'corrupt.pre.GraphViz2Newick',    'corrupt-graphviz2newick')
+createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate')
+createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
+createScript(project, 'corrupt.GrowTree',               'corrupt-grow')
+
+createScript(project, 'humi.Preprocess',                'humi-preprocess')
+createScript(project, 'humi.freq.DeltaMethod',          'humi-delta')
+createScript(project, 'humi.posets.Intervals2Poset',    'humi-poset')
+createScript(project, 'humi.posets.ComparePosets',      'humi-compare-posets')
+
+createScript(project, 'humi.models.BNB',      'humi-bnb')
+createScript(project, 'humi.models.MixBNB',   'humi-mixbnb')
+createScript(project, 'humi.models.MixYS',    'humi-mixys')
+createScript(project, 'humi.models.NB',       'humi-nb')
+createScript(project, 'humi.models.YS',       'humi-ys')
+createScript(project, 'humi.models.MixNB',    'humi-mixnb')
+createScript(project, 'humi.models.Poi',      'humi-poi')
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      repository(url: "file:///${System.properties['user.home']}/artifacts/")
+      snapshotRepository(url: "file:///${System.properties['user.home']}/artifacts/")
+      pom.version = "1.0.5" 
+      pom.artifactId = "nowellpack"
+      pom.groupId = "ca.ubc.stat"
+    }
+  }
+}
+
+jar {
+    from { fileTree(dir: 'src/main/java', includes: [ '**/*.bl' ]) }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from 'build/docs/javadoc'
+}
+
+artifacts {
+  archives jar
+  archives sourcesJar
+  archives javadocJar
+}
+
+configurations.archives.with {
+    artifacts.remove artifacts.find { it.archiveTask.is distZip }
+    artifacts.remove artifacts.find { it.archiveTask.is distTar }
+}

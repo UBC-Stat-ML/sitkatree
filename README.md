@@ -5,7 +5,7 @@ Salehi, Sohrab, et al. "Cancer phylogenetic tree inference at scale from 1000s o
 ```
 
 # Tree Inference Tutorial
-In this section, we demonstrate how Sitka can be used to perform inference on a dummy dataset, i.e., `example/data/cnv.csv`. The additional tree-growing feature is described in continuation, in the next section.
+In this section, we demonstrate how Sitka can be used to perform inference on a dummy dataset, i.e., `example/data/cnv.csv`. The additional tree-growing feature is described in continuation, in the next section. Note [Tidyverse](https://www.tidyverse.org/) is required.
 
 ## Step 0: build package and prepare data
 To install the inference software, change directory into `sitka/` and run `./gradlew installDist`. Compiled binaries can be found in `sitka/build/install/nowellpack/bin`. Add the above path to the `PATH` environment variable. Alternatively, prepend binary invocations `COMMAND-NAME` with the path, i.e., `sitka/build/install/nowellpack/bin/COMMAND-NAME`.

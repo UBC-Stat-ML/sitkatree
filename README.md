@@ -10,6 +10,14 @@ In this section, we demonstrate how Sitka can be used to perform inference on a 
 ## Step 0: build package and prepare data
 To install the inference software, change directory into `sitka/` and run `./gradlew installDist`. Compiled binaries can be found in `sitka/build/install/nowellpack/bin`. Add the above path to the `PATH` environment variable. Alternatively, prepend binary invocations `COMMAND-NAME` with the path, i.e., `sitka/build/install/nowellpack/bin/COMMAND-NAME`.
 
+### NB
+
+Make ssure that you have the following Oracle Java 8  installed:
+```
+java version "1.8.0_202"
+Java(TM) SE Runtime Environment (build 1.8.0_202-b08)
+```
+
 Formally, Sitka takes as input a cell by locus matrix whose entries take on binary values as described in the paper. Technically, the input CSV file should contain columns `cells`, `loci`, and `tipInclusionProbabilities` (a cell by locus matrix in [tidy format](https://vita.had.co.nz/papers/tidy-data.html)). For example, the first 4 rows might look like the following:
 ```
 "cells","loci","tipInclusionProbabilities"

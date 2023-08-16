@@ -66,11 +66,13 @@ $ corrupt-infer-with-noisy-params \
     --model.fnrBound 0.5 \
     --engine PT \
     --engine.initialization FORWARD \
-    --engine.nScans 1000 \
+    --engine.nScans 10000 \
     --engine.nPassesPerScan 1 \
-    --engine.nChains 1
+    --engine.nChains 10
 ```
 Briefly, the model-specific arguments `globalParameterization`,`binaryMatrix`,`fprBound`, `fnrBound` control for, respectively, the global parameter model, the input file path, and upper bounds for false-positive and false-negative rates.
+
+Set the `nScans`, `nChains`, `nPassesPerScan` according to a balance of computational budget and dataset complexity.  
 
 Additional details for command line arguments can found on the [Blang webpage](https://www.stat.ubc.ca/~bouchard/blang/), or via `corrupt-infer-with-noisy-params --help`.
 
